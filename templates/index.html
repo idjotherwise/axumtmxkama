@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Otherwise | Testing out htmx</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="/dist/htmx.min.js"></script>
+    <link href="/dist/app.css" rel="stylesheet" />
+  </head>
+  <body>
+    <div>
+      <h1 class="text-3xl font-bold underline text-red">Hello {{ name }}!</h1>
+      <button hx-get="/clicked" hx-trigger="click[altKey]">
+        alt click me for a hey
+      </button>
+
+      <div class="bg-slate-300">
+        <p id="reminders-message">
+          Reminders for (reversed:) {{name|reverse}} (doublyreversed:)
+          {{name|reverse|reverse}}
+        </p>
+      </div>
+      <button
+        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 border border-blue-700 rounded"
+        id="get-counter"
+        hx-get="/counter"
+        hx-target="#getCounterResult"
+      >
+        Counter
+      </button>
+      <div id="getCounterResult"></div>
+      <div>
+        <button
+          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 border border-blue-700 rounded"
+          hx-get="/settings"
+          hx-target="#settingsDiv"
+        >
+          Settings
+        </button>
+        <div id="settingsDiv"></div>
+      </div>
+    </div>
+  </body>
+</html>

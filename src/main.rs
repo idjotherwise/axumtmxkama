@@ -10,21 +10,37 @@ use axum::{
     Router,
 };
 use std::{net::SocketAddr, time::Duration};
-use tower_http::{classify::ServerErrorsFailureClass, trace::TraceLayer};
+use tower_http::{classify::ServerErrorsFailureClass, services::ServeDir, trace::TraceLayer};
 use tower_livereload::LiveReloadLayer;
 
 use tracing::{info_span, Span};
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use crate::telemetry::{get_subscriber, init_subscriber};
+
+mod filters {
+    /// custom filter which can be used in templates as {{ x|reverse }}
+    pub fn reverse<T: std::fmt::Display>(s: T) -> ::askama::Result<String> {
+        let s = s.to_string();
+        Ok(s.chars().rev().collect::<String>())
+    }
+}
+
 #[derive(Template)]
-#[template(path = "hello.html")]
-struct HelloTemplate<'a> {
+#[template(path = "index.html")]
+struct Index<'a> {
     name: &'a str,
 }
 
-async fn index() -> HelloTemplate<'static> {
-    HelloTemplate { name: "world" }
+#[derive(Template)]
+#[template(path = "clicked.html")]
+struct ClickedTemplate {}
+
+async fn index() -> Index<'static> {
+    Index { name: "Otherwise" }
+}
+
+async fn clicked() -> ClickedTemplate {
+    ClickedTemplate {}
 }
 
 #[tokio::main]
@@ -34,6 +50,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let app = Router::new()
         .route("/", get(index))
+        .route("/clicked", get(clicked))
+        .nest_service("/dist", ServeDir::new("dist"))
         .layer(LiveReloadLayer::new())
         .layer(
             TraceLayer::new_for_http()
@@ -44,7 +62,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .extensions()
                         .get::<MatchedPath>()
                         .map(MatchedPath::as_str);
-
                     info_span!(
                         "http_request",
                         method = ?request.method(),
